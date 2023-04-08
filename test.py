@@ -1,5 +1,3 @@
-from vector import Vector
-from rectLine import Recta
+from vector import Vector, Recta
 
-recta = Recta.ecuacionNormal(Vector(1, 2), Vector(4, 3))
-print(recta)
+print(Vector.colineales(Vector(-1, 3), Vector(250, 4), Vector(1003, 7)))
