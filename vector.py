@@ -1,8 +1,18 @@
 from math import radians, sin, cos
+
 class Vector2():
     @staticmethod
-    def elOrtogonal(v):
-        return Vector2(-v.y, v.x)
+    def O():
+        return Vector2(0,0)
+    @staticmethod
+    def E1():
+        return Vector2(1,0)
+    @staticmethod
+    def E2():
+        return Vector2(0, 1)
+    
+    def ortogonal(self):
+        return TransformacionLineal2(0, -1, 1, 0).aplicar(self) #Vector2(-v.y, v.x)
     
     @staticmethod
     def sonOrtogonales(v1, v2):
@@ -43,15 +53,11 @@ class Vector2():
         return (self.x ** 2 + self.y ** 2) ** .5
     
     def __eq__(self, v2):
-        return self * Vector2.elOrtogonal(v2) == 0
+        return self * v2.ortogonal() == 0
 
 
 
 class Recta2():
-    @staticmethod
-    def P(L, X):
-        return TransformacionLineal2.P(L.director).aplicar(X) + TransformacionLineal2.P(L.normal).aplicar(L.punto)
-
     @staticmethod
     def dosPuntos(p1, p2):
         director = p2 - p1
@@ -62,7 +68,7 @@ class Recta2():
         params = {
             "normal": normal,
             "punto": punto,
-            "director": Vector2.elOrtogonal(normal)
+            "director": normal.ortogonal()
         }
         recta = Recta2(params)
         return recta
@@ -79,13 +85,13 @@ class Recta2():
         params = {
             "normal": normal,
             "punto": punto,
-            "director": Vector2.elOrtogonal(normal)
+            "director": normal.ortogonal()
         }
 
     @staticmethod
     def vectorialParametrica(director, punto):
         params = {
-            "normal": Vector2.elOrtogonal(director),
+            "normal": director.ortogonal(),
             "director": director,
             "punto": punto
         }
@@ -103,6 +109,14 @@ class Recta2():
     def __str__(self):
         return f"NORMALES: r{self.normal}\nDIRECTORES: r{self.director}\nPUNTO: {self.punto}\nEC. GENERAL: {self.ecuacionGeneral()}"
     
+    def P(self, X):
+        return TransformacionLineal2.P(self.director).aplicar(X) + TransformacionLineal2.P(self.normal).aplicar(self.punto)
+
+
+    def S(self, X):
+        return (self.P(X) * 2) - X
+    
+
     def ecuacionGeneral(self):
         return f"{self.a}x + {self.b}y + {self.c} = 0"
     
@@ -129,7 +143,14 @@ class TransformacionLineal2():
         return Hr
     
     @staticmethod
-    def P(D):
+    def P(DL, X = None):
+        D = None
+        if isinstance(DL, Recta2) and Vector2.O() in DL:
+            D = DL.director
+        elif isinstance(DL, Vector2):
+            D = DL
+        else:
+            raise TypeError
         d1 = D.x
         d2 = D.y
         divisor = (d1 ** 2 + d2 ** 2)
@@ -141,7 +162,14 @@ class TransformacionLineal2():
         return pD
     
     @staticmethod
-    def S(D):
+    def S(DL):
+        D = None
+        if isinstance(DL, Recta2) and Vector2.O() in DL:
+            D = DL.director
+        elif isinstance(DL, Vector2):
+            D = DL
+        else:
+            raise TypeError
         d1 = D.x
         d2 = D.y
         divisor = (d1 ** 2 + d2 ** 2)
@@ -167,22 +195,31 @@ class TransformacionLineal2():
         R.setName(f"R[{t}°]")
         return R
 
-    def __init__(self, a, b, c, d):
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
+    def __init__(self, a, b, c, d, r = 1.0):
+        self.a = a * r
+        self.b = b * r
+        self.c = c * r
+        self.d = d * r
         self.setName("T")
     
     def setName(self, name):
         self.name = name
 
+    def esInyectiva(self):
+        return not ( self.aplicar(Vector2.E1()) == self.aplicar(Vector2.E2()).ortogonal() )
+    
     def aplicar(self, v):
         return Vector2(self.a * v.x + self.b * v.y, self.c * v.x + self.d * v.y)
     
+    def __eq__(self, v):
+        return round(self.a,2) == round(v.a,2) and round(self.b,2) == round(v.b,2) and round(self.c,2) == round(v.c,2) and round(self.d,2) == round(v.d,2)
+
     def __str__(self):
         a = round(self.a, 2)
         b = round(self.b, 2)
         c = round(self.c, 2)
         d = round(self.d, 2)
-        return f"{self.name} = \t({a}x + {b}y)\n\t\t({c}x + {d}y)"
+        lenName = len(f"{self.name} = ")
+        tabs = (lenName + (lenName % 8)) // 8
+        tabstring = "\t" * (1 if tabs == 0 else tabs) 
+        return f"{self.name} = \t({a}x + {b}y)\n{tabstring}({c}x + {d}y)\n"
