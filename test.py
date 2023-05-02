@@ -1,3 +1,3 @@
-from vector import Vector, Recta
+from vector import Vector2, Recta2, TransformacionLineal2
 
-print(Vector.colineales(Vector(-1, 3), Vector(250, 4), Vector(1003, 7)))
+
